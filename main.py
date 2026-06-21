@@ -4,7 +4,7 @@ from app.routers.users import users_router
 from a2wsgi import ASGIMiddleware
     
 app = FastAPI()
-app.include_router(users_router, tags=["Users"])
+# app.include_router(users_router, tags=["Users"])
 app.mount("/static", staticfiles.StaticFiles(directory="app/public", html=True), name="/static")
 
 wsgi_app = ASGIMiddleware(app) #type: ignore
