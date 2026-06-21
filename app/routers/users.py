@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, status, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database.database import get_db
 from app.models.models import Person
+from app.schemas.schemas import PersonCreate
 
 router = APIRouter(prefix="/api/users")
 
@@ -27,8 +27,8 @@ async def get_person(id: int, db: AsyncSession = Depends(get_db)):
 
 # Создать пользователя
 @router.post("")
-async def create_person(data = Body(), db: AsyncSession = Depends(get_db)):
-    new_person = Person(name=data["name"], age=data["age"])
+async def create_person(data: PersonCreate, db: AsyncSession = Depends(get_db)):
+    new_person = Person(name=data.name, age=data.age)
     db.add(new_person)
     await db.commit()       # Сохраняем в БД
     await db.refresh(new_person) # Загружаем сгенерированный id из БД
