@@ -1,13 +1,10 @@
-import uvicorn
-from fastapi import FastAPI, staticfiles
-from app.routers.users import users_router
+from fastapi import FastAPI
 from a2wsgi import ASGIMiddleware
-    
+
 app = FastAPI()
-# app.include_router(users_router, tags=["Users"])
-app.mount("/static", staticfiles.StaticFiles(directory="app/public", html=True), name="/static")
 
-wsgi_app = ASGIMiddleware(app) #type: ignore
+@app.get("/")
+def test_root():
+    return {"message": "Ура, FastAPI на PythonAnywhere наконец-то работает!"}
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", reload=True)
+wsgi_app = ASGIMiddleware(app)  # type: ignore
