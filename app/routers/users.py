@@ -7,11 +7,11 @@ from app.models.models import Person
 users_router = APIRouter()
 
 @users_router.get("/api/users")
-def get_people():
+async def get_people():
     return people
 
 @users_router.get("/api/users/{id}")
-def get_person(id):
+async def get_person(id):
     person = find_person(id)
     print(person)
     if person == None:
@@ -22,13 +22,13 @@ def get_person(id):
     return person
 
 @users_router.post("/api/users")
-def create_person(data = Body()):
+async def create_person(data = Body()):
     person = Person(data["name"], data["age"])
     people.append(person)
     return person
 
 @users_router.put("/api/users")
-def edit_person(data = Body()):
+async def edit_person(data = Body()):
     person = find_person(data["id"])
     if person == None:
         return JSONResponse(
@@ -40,7 +40,7 @@ def edit_person(data = Body()):
     return person
 
 @users_router.delete("/api/users/{id}")
-def delete_person(id):
+async def delete_person(id):
     person = find_person(id)
     if person == None:
         return JSONResponse(
