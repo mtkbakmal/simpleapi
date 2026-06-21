@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление пользователями</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #6b7280;
+            --secondary-hover: #4b5563;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        input {
+            padding: 10px 14px;
+            font-size: 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 35px;
+        }
+
+        button {
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: var(--text);
+        }
+
+        .btn-secondary:hover { background-color: #d1d5db; }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover { background-color: var(--danger-hover); }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 15px;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #f9fafb;
+        }
+
+        .td-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .td-actions button {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Список пользователей</h2>
+        
+        <div class="form-container">
+            <input type="hidden" id="userId" />
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="userName">Имя</label>
+                    <input id="userName" placeholder="Введите имя..." autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label for="userAge">Возраст</label>
+                    <input id="userAge" type="number" min="0" max="150" placeholder="0" />
+                </div>
+            </div>
+            <div class="actions-bar">
+                <button id="saveBtn" class="btn-primary">Сохранить</button>
+                <button id="resetBtn" class="btn-secondary">Сбросить</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Имя</th>
+                        <th style="width: 20%">Возраст</th>
+                        <th style="width: 30%; text-align: right;">Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+  
+    <script>
+        // Получение всех пользователей
+        async function getUsers() {
+            const response = await fetch("/api/users", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const users = await response.json();
+                const rows = document.querySelector("tbody");
+                rows.innerHTML = ""; // Очищаем перед рендером
+                users.forEach(user => rows.append(row(user)));
+            }
+        }
+
+        // Получение одного пользователя
+        async function getUser(id) {
+            const response = await fetch(`/api/users/${id}`, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.getElementById("userId").value = user.id;
+                document.getElementById("userName").value = user.name;
+                document.getElementById("userAge").value = user.age;
+                document.getElementById("saveBtn").textContent = "Обновить"; // Меняем текст кнопки для контекста
+            } else {
+                const error = await response.json();
+                console.error(error.message);
+            }
+        }
+
+        // Добавление пользователя
+        async function createUser(userName, userAge) {
+            const response = await fetch("/api/users", { // Исправлен путь ("api/users" -> "/api/users")
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: userName,
+                    age: parseInt(userAge, 10)
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.querySelector("tbody").append(row(user));
+            } else {
+                const error = await response.json();
+                console.error(error.message);
+            }
+        }
+
+        // Изменение пользователя
+        async function editUser(userId, userName, userAge) {
+            const response = await fetch("/api/users", { // Исправлен путь
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: userId,
+                    name: userName,
+                    age: parseInt(userAge, 10)
+                })
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.querySelector(`tr[data-rowid='${user.id}']`).replaceWith(row(user));
+            } else {
+                const error = await response.json();
+                console.error(error.message);
+            }
+        }
+
+        // Удаление пользователя
+        async function deleteUser(id) {
+            if (!confirm("Вы уверены, что хотите удалить этого пользователя?")) return;
+            
+            const response = await fetch(`/api/users/${id}`, {
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const user = await response.json();
+                document.querySelector(`tr[data-rowid='${user.id}']`).remove();
+            } else {
+                const error = await response.json();
+                console.error(error.message);
+            }
+        }
+  
+        // Сброс данных формы
+        function reset() {
+            document.getElementById("userId").value = "";
+            document.getElementById("userName").value = "";
+            document.getElementById("userAge").value = "";
+            document.getElementById("saveBtn").textContent = "Сохранить";
+        }
+
+        // Создание строки для таблицы
+        function row(user) {
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", user.id);
+  
+            const nameTd = document.createElement("td");
+            nameTd.append(user.name);
+            tr.append(nameTd);
+  
+            const ageTd = document.createElement("td");
+            ageTd.append(user.age);
+            tr.append(ageTd);
+  
+            const linksTd = document.createElement("td");
+            linksTd.className = "td-actions";
+  
+            const editLink = document.createElement("button"); 
+            editLink.className = "btn-secondary";
+            editLink.append("Изменить");
+            editLink.addEventListener("click", async() => await getUser(user.id));
+            linksTd.append(editLink);
+  
+            const removeLink = document.createElement("button"); 
+            removeLink.className = "btn-danger";
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", async () => await deleteUser(user.id));
+            linksTd.append(removeLink);
+            
+            tr.appendChild(linksTd);
+            return tr;
+        }
+
+        // Привязка событий
+        document.getElementById("resetBtn").addEventListener("click", () => reset());
+  
+        document.getElementById("saveBtn").addEventListener("click", async () => {
+            const id = document.getElementById("userId").value;
+            const name = document.getElementById("userName").value.trim();
+            const age = document.getElementById("userAge").value;
+            
+            if (name === "" || age === "") {
+                alert("Пожалуйста, заполните все поля!");
+                return;
+            }
+            
+            if (id === "")
+                await createUser(name, age);
+            else
+                await editUser(id, name, age);
+            reset();
+        });
+  
+        // Первая загрузка данных
+        getUsers();
+    </script>
+</body>
+</html>
