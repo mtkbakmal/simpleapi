@@ -1,11 +1,24 @@
-import uvicorn, os
+import os
+import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.routers.users import router as users_router
+from app.database.database import engine, Base
 from app.routers.pages import router as pages_router
-    
-app = FastAPI()
+from app.routers.users import router as users_router
+
+# Функция, которая выполнится ПЕРЕД стартом сервера
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Создает таблицы в Postgres, если их еще нет
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    # Тут можно что-то закрывать при выключении сервера (например, пул соединений)
+
+app = FastAPI(lifespan=lifespan) # Передаем lifespan в FastAPI
+
 app.include_router(pages_router, tags=["Pages"])
 app.include_router(users_router, tags=["Users"])
 
