@@ -9,5 +9,5 @@ app.mount("/", staticfiles.StaticFiles(directory="app/public", html=True), name=
 
 wsgi_app = ASGIMiddleware(app) #type: ignore
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", reload=True)
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", reload=True)
