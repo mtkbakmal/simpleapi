@@ -8,14 +8,14 @@ from app.database.database import engine, Base
 from app.routers.pages import router as pages_router
 from app.routers.users import router as users_router
 
-# Функция, которая выполнится ПЕРЕД стартом сервера
+# Функция которая выполнится ПЕРЕД стартом сервера
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Создает таблицы в Postgres, если их еще нет
+    # Создает таблицы в postgres если их еще нет
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Тут можно что-то закрывать при выключении сервера (например, пул соединений)
+    # Тут можно что-то закрывать при выключении сервера например пул соединений
 
 app = FastAPI(lifespan=lifespan) # Передаем lifespan в FastAPI
 
